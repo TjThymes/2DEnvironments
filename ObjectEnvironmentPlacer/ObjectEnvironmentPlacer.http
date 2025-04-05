@@ -1,0 +1,6 @@
+@ObjectEnvironmentPlacer_HostAddress = http://localhost:5272
+
+GET {{ObjectEnvironmentPlacer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
