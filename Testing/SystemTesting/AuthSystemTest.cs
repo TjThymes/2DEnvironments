@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Newtonsoft.Json;
 using FluentAssertions;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
+using ObjectEnvironmentPlacer; // ✅ Correct namespace import for your real Program.cs!
 
 namespace ObjectEnvironmentPlacer.Tests.SystemTests
 {
@@ -23,8 +23,8 @@ namespace ObjectEnvironmentPlacer.Tests.SystemTests
         {
             var registerPayload = new
             {
-                Name = "SystemTestUser",
-                Email = "systemtestuser@example.com",
+                Name = "SystemTestUser2",
+                Email = "systemtestuser2@example.com",
                 Password = "Password123!"
             };
 
@@ -32,7 +32,7 @@ namespace ObjectEnvironmentPlacer.Tests.SystemTests
 
             var response = await _client.PostAsync("/api/auth/register", content);
 
-            response.EnsureSuccessStatusCode();
+            response.EnsureSuccessStatusCode(); // 2xx success
         }
 
         [Fact]
@@ -48,10 +48,10 @@ namespace ObjectEnvironmentPlacer.Tests.SystemTests
 
             var response = await _client.PostAsync("/api/auth/login", content);
 
-            response.EnsureSuccessStatusCode();
+            response.EnsureSuccessStatusCode(); // 2xx success
 
             var responseBody = await response.Content.ReadAsStringAsync();
-            responseBody.Should().Contain("accessToken");
+            responseBody.Should().Contain("accessToken"); // ✅ check JWT token present
         }
     }
 }

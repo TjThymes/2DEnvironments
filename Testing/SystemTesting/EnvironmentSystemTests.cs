@@ -23,9 +23,29 @@ namespace ObjectEnvironmentPlacer.Tests.SystemTests
         [Fact]
         public async Task GetAllEnvironments_ShouldReturnOk()
         {
-            var response = await _client.GetAsync("/api/environments2d");
+            // 1. Login to get a token
+            var loginPayload = new
+            {
+                UserName = "admin",
+                Password = "Admin1*"
+            };
 
-            response.EnsureSuccessStatusCode();
+            var loginContent = new StringContent(JsonConvert.SerializeObject(loginPayload), Encoding.UTF8, "application/json");
+            var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
+
+            loginResponse.EnsureSuccessStatusCode();
+
+            var loginResponseBody = await loginResponse.Content.ReadAsStringAsync();
+            dynamic loginResult = JsonConvert.DeserializeObject(loginResponseBody);
+            string token = loginResult.accessToken;
+
+            // 2. Attach the token
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            // 3. Now call the protected endpoint
+            var response = await _client.GetAsync("/api/environments2d/myenvironmentids");
+
+            response.EnsureSuccessStatusCode(); // ✅ should not 401 now
         }
     }
 }
