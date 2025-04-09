@@ -70,9 +70,7 @@ packages/
 # Visual Studio / Rider generated
 .vscode/
 .idea/
-*.csproj
 *.unityproj
-*.sln
 *.suo
 *.tmp
 *.user
