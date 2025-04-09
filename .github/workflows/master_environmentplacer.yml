@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP.Net Core app to Azure Web App - EnvironmentPlacer
+name: Build, Test, and Deploy ASP.NET Core app to Azure Web App - EnvironmentPlacer
 
 on:
   push:
@@ -10,10 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-test:
     runs-on: windows-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -21,48 +18,51 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '3.1'
+          dotnet-version: '8.0.x' # 🔥 Your project is .NET 8.0!
+
+      - name: Restore dependencies
+        run: dotnet restore
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      - name: Run Unit and System Tests 🧪
+        run: dotnet test --configuration Release --no-build --verbosity normal
 
-      - name: Upload artifact for deployment job
+      - name: Publish app
+        run: dotnet publish -c Release -o '${{env.DOTNET_ROOT}}/myapp'
+
+      - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
+          name: dotnet-app
           path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
     runs-on: windows-latest
-    needs: build
+    needs: build-and-test
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
-      - name: Login to Azure
+          name: dotnet-app
+
+      - name: Azure Login 🔒
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_550EC870B5714980A178D61761CDC0C4 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3E33D09473074C01A1226E1B987B91BC }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B21DB4D856AB4EE28D5D1B67621AD17C }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }} # Prefer using single JSON secret!
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to Azure Web App 🚀
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'EnvironmentPlacer'
           slot-name: 'Production'
           package: .
-          
