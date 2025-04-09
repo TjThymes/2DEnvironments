@@ -9,7 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 namespace ObjectEnvironmentPlacer.Other
 {
 
-    public class JwtTokenGenerator
+    public class JwtTokenGenerator : IJwtTokenGenerator
+
     {
         private readonly IConfiguration _config;
 

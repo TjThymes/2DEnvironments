@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using ObjectEnvironmentPlacer.Objects;
+using ObjectEnvironmentPlacer.Interface;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
-using ObjectEnvironmentPlacer.Interface;
 
 namespace ObjectEnvironmentPlacer.Controllers
 {
@@ -35,25 +35,16 @@ namespace ObjectEnvironmentPlacer.Controllers
         public async Task<ActionResult<Environment2D>> Create([FromBody] Environment2D request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Name))
-            {
-                _logger.LogWarning("Environment creation failed: Name is empty.");
                 return BadRequest(new { Message = "Environment name cannot be empty." });
-            }
 
-            var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
-                         User.FindFirstValue(ClaimTypes.NameIdentifier);
-
+            var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-            {
-                _logger.LogWarning("User ID missing in token.");
                 return Unauthorized(new { Message = "Invalid or missing token." });
-            }
 
             var createdEnvironment = await _environmentRepository.InsertAsync(request.Name, request.Description);
             await _playerEnvironmentRepository.AddPlayerToEnvironment(userId, createdEnvironment.ID);
 
             _logger.LogInformation($"Environment {createdEnvironment.ID} created and linked to user {userId}.");
-
             return Ok(createdEnvironment);
         }
 
@@ -68,49 +59,83 @@ namespace ObjectEnvironmentPlacer.Controllers
         public async Task<ActionResult<Environment2D>> GetEnvironmentWithObjects(Guid id)
         {
             var environment = await _environmentRepository.GetByIdWithObjectsAsync(id);
-
-            if (environment == null)
-            {
-                _logger.LogWarning($"Environment {id} not found.");
-                return NotFound(new { Message = $"Environment with ID {id} not found." });
-            }
-
-            return Ok(environment);
+            return environment == null
+                ? NotFound(new { Message = $"Environment with ID {id} not found." })
+                : Ok(environment);
         }
 
         [HttpDelete("delete/{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var environment = await _environmentRepository.GetByIdAsync(id);
-
             if (environment == null)
-            {
-                _logger.LogWarning($"Environment {id} not found for deletion.");
                 return NotFound(new { Message = $"Environment with ID {id} not found." });
-            }
 
             await _environmentRepository.DeleteAsync(id);
-
             _logger.LogInformation($"Environment {id} deleted.");
             return NoContent();
         }
 
         [HttpPost("addplayer")]
-        public async Task<IActionResult> AddPlayerToEnvironment([FromQuery] string playerId, [FromQuery] Guid environmentId)
+        public async Task<IActionResult> AddPlayerToEnvironment([FromQuery] Guid environmentId)
         {
-            await _playerEnvironmentRepository.AddPlayerToEnvironment(playerId, environmentId);
+            var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
+                         User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            _logger.LogInformation($"Player {playerId} added to environment {environmentId}.");
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Invalid or missing token." });
+
+            await _playerEnvironmentRepository.AddPlayerToEnvironment(userId, environmentId);
+
+            _logger.LogInformation($"User {userId} added to environment {environmentId}.");
             return Ok(new { Message = "Player added to environment." });
         }
 
-        [HttpDelete("removeplayer")]
-        public async Task<IActionResult> RemovePlayerFromEnvironment([FromQuery] string playerId, [FromQuery] Guid environmentId)
-        {
-            await _playerEnvironmentRepository.RemovePlayerFromEnvironment(playerId, environmentId);
 
-            _logger.LogInformation($"Player {playerId} removed from environment {environmentId}.");
+        [HttpDelete("removeplayer")]
+        public async Task<IActionResult> RemovePlayerFromEnvironment([FromQuery] Guid environmentId)
+        {
+            var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
+             User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Invalid or missing token." });
+            await _playerEnvironmentRepository.RemovePlayerFromEnvironment(userId, environmentId);
+            _logger.LogInformation($"Player {userId} removed from environment {environmentId}.");
             return Ok(new { Message = "Player removed from environment." });
         }
+        [HttpGet("myenvironmentids")]
+        public async Task<ActionResult<IEnumerable<object>>> GetEnvironmentsForCurrentUser()
+        {
+            var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
+                         User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { Message = "Invalid or missing token." });
+
+            var environmentIds = await _playerEnvironmentRepository.GetEnvironmentIdsByUserIdAsync(userId);
+
+            if (environmentIds == null || environmentIds.Count == 0)
+                return NotFound(new { Message = "No environments found for this user." });
+
+            var environments = new List<object>();
+
+            foreach (var envId in environmentIds)
+            {
+                var env = await _environmentRepository.GetByIdAsync(envId);
+                if (env != null)
+                {
+                    environments.Add(new
+                    {
+                        id = env.ID,
+                        name = env.Name,
+                        description = env.Description
+                    });
+                }
+            }
+
+            return Ok(environments);
+        }
+
     }
 }
