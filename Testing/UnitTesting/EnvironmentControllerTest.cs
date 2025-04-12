@@ -39,8 +39,8 @@ public class EnvironmentControllerTests
     public async Task Create_ShouldReturnOk_WhenEnvironmentIsCreated()
     {
         // Arrange
-        var env = new Environment2D { ID = Guid.NewGuid(), Name = "Test Environment", Description = "Test Desc" };
-        _envRepoMock.Setup(r => r.InsertAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(env);
+        var env = new Environment2D { ID = Guid.NewGuid(), Name = "Test Environment", Description = "Test Desc", Width = 100, Height = 100 };
+        _envRepoMock.Setup(r => r.InsertAsync(It.IsAny<string>(), It.IsAny<string>(),It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync(env);
 
         // Act
         var result = await _controller.Create(new Environment2D { Name = "Test Environment" });
