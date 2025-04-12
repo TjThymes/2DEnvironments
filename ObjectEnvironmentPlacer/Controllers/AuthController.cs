@@ -121,5 +121,18 @@ namespace ObjectEnvironmentPlacer.Controllers
                 ? Ok(new { Message = "User deleted successfully." })
                 : BadRequest(new { Message = "Failed to delete user.", Errors = deleteResult.Errors });
         }
+
+        [Route("health")]
+        [ApiController]
+        public class HealthController : ControllerBase
+        {
+            [HttpGet]
+            public IActionResult Get()
+            {
+                return Ok("Healthy ✅");
+            }
+        }
     }
+
 }
+
