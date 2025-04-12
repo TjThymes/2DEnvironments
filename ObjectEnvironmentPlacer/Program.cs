@@ -93,7 +93,7 @@ namespace ObjectEnvironmentPlacer
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "2DWorld API v1");
-                c.RoutePrefix = string.Empty;
+                c.RoutePrefix = "swagger";
             });
 
             app.UseHttpsRedirection();
