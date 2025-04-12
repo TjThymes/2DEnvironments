@@ -47,10 +47,6 @@ Migrations/
 .DS_Store
 Thumbs.db
 
-# Ignore compiled DLLs
-*.dll
-*.exe
-*.pdb
 
 # Ignore NuGet packages
 *.nupkg
