@@ -65,7 +65,6 @@ namespace ObjectEnvironmentPlacer.Repositories
             string sql = @"INSERT INTO Objects2D (ID, EnvironmentID, PrefabID, PositionX, PositionY, ScaleX, ScaleY, RotationZ, SortingLayer) 
                    VALUES (@ID, @EnvironmentID, @PrefabID, @PositionX, @PositionY, @ScaleX, @ScaleY, @RotationZ, @SortingLayer)";
 
-            obj.ID = Guid.NewGuid(); // ✅ Ensure a new ID is generated
             await _dbConnection.ExecuteAsync(sql, obj);
         }
 

@@ -41,7 +41,13 @@ namespace ObjectEnvironmentPlacer.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { Message = "Invalid or missing token." });
 
-            var createdEnvironment = await _environmentRepository.InsertAsync(request.Name, request.Description);
+            var createdEnvironment = await _environmentRepository.InsertAsync(
+                request.Name,
+                request.Description,
+                request.Width,
+                request.Height
+            );
+
             await _playerEnvironmentRepository.AddPlayerToEnvironment(userId, createdEnvironment.ID);
 
             _logger.LogInformation($"Environment {createdEnvironment.ID} created and linked to user {userId}.");

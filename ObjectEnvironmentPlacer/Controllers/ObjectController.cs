@@ -126,9 +126,13 @@ namespace ObjectEnvironmentPlacer.Controllers
                         return BadRequest("Environment ID is required.");
                     }
 
-                    // ✅ Assign EnvironmentID and Generate New ID
-                    gameObject.ID = Guid.NewGuid();
-                    gameObject.EnvironmentID = environmentId;
+                if (gameObject.ID == Guid.Empty)
+                {
+                    gameObject.ID = Guid.NewGuid(); // Alleen als Unity geen ID gaf
+                }
+
+                // ✅ Assign EnvironmentID and Generate New ID
+                gameObject.EnvironmentID = environmentId;
 
                     await _objectRepository.SaveObjectToEnvironmentAsync(gameObject);
                     _logger.LogInformation($"✅ Object {gameObject.ID} saved to Environment {environmentId}");

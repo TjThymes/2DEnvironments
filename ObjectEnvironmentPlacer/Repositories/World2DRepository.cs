@@ -17,21 +17,23 @@ namespace ObjectEnvironmentPlacer.Repositories
                 _dbConnection = new SqlConnection(connectionString);
             }
 
-            public async Task<Environment2D> InsertAsync(string name, string? description)
+        public async Task<Environment2D> InsertAsync(string name, string? description, int width, int height)
+        {
+            if (string.IsNullOrWhiteSpace(name))
             {
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    throw new ArgumentException("Environment Name cannot be empty.");
-                }
-
-                var newId = Guid.NewGuid(); 
-
-                string sql = @"INSERT INTO Environment2D (ID, Name, Description) VALUES (@ID, @Name, @Description)";
-                await _dbConnection.ExecuteAsync(sql, new { ID = newId, Name = name, Description = description });
-
-                return new Environment2D { ID = newId, Name = name, Description = description };
+                throw new ArgumentException("Environment Name cannot be empty.");
             }
-            public async Task<IEnumerable<Environment2D>> GetAllAsync()
+
+            var newId = Guid.NewGuid();
+
+            string sql = @"INSERT INTO Environment2D (ID, Name, Description, Width, Height) 
+                   VALUES (@ID, @Name, @Description, @Width, @Height)";
+            await _dbConnection.ExecuteAsync(sql, new { ID = newId, Name = name, Description = description, Width = width, Height = height });
+
+            return new Environment2D { ID = newId, Name = name, Description = description, Width = width, Height = height };
+        }
+
+        public async Task<IEnumerable<Environment2D>> GetAllAsync()
             {
                 string sql = "SELECT * FROM Environment2D";
                 return await _dbConnection.QueryAsync<Environment2D>(sql);
