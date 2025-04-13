@@ -41,20 +41,40 @@ namespace ObjectEnvironmentPlacer.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { Message = "Invalid or missing token." });
 
+            try
+            {
+                // ✅ Ophalen bestaande omgevingen van deze gebruiker
+                var existingEnvironments = await _environmentRepository.GetByUserIdAsync(userId);
 
+                // ✅ Maximaal 5 omgevingen
+                if (existingEnvironments.Count >= 5)
+                    return BadRequest(new { Message = "You cannot have more than 5 environments." });
 
-            var createdEnvironment = await _environmentRepository.InsertAsync(
-                request.Name,
-                request.Description,
-                request.Width,
-                request.Height
-            );
+                // ✅ Naam moet uniek zijn per gebruiker
+                if (existingEnvironments.Any(env => env.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase)))
+                    return BadRequest(new { Message = "An environment with the same name already exists." });
 
-            await _playerEnvironmentRepository.AddPlayerToEnvironment(userId, createdEnvironment.ID);
+                // ✅ Nieuwe omgeving maken
+                var createdEnvironment = await _environmentRepository.InsertAsync(
+                    request.Name,
+                    request.Description,
+                    request.Width,
+                    request.Height
+                );
 
-            _logger.LogInformation($"Environment {createdEnvironment.ID} created and linked to user {userId}.");
-            return Ok(createdEnvironment);
+                await _playerEnvironmentRepository.AddPlayerToEnvironment(userId, createdEnvironment.ID);
+
+                _logger.LogInformation($"Environment {createdEnvironment.ID} created and linked to user {userId}.");
+
+                return Ok(createdEnvironment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while creating environment");
+                return StatusCode(500, new { Message = "An unexpected error occurred while creating the environment." });
+            }
         }
+
 
 
         [HttpGet]
