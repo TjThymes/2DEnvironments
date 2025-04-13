@@ -41,19 +41,7 @@ namespace ObjectEnvironmentPlacer.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { Message = "Invalid or missing token." });
 
-            // ✅ Ophalen hoeveel environments de gebruiker al heeft
-            var existingEnvironments = await _environmentRepository.GetByUserIdAsync(userId);
 
-            if (existingEnvironments.Count >= 5)
-            {
-                return BadRequest(new { Message = "You cannot have more than 5 environments." });
-            }
-
-            // ✅ Check of naam al bestaat
-            if (existingEnvironments.Any(e => e.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                return BadRequest(new { Message = "An environment with the same name already exists." });
-            }
 
             var createdEnvironment = await _environmentRepository.InsertAsync(
                 request.Name,
