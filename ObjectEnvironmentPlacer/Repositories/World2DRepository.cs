@@ -19,13 +19,14 @@ namespace ObjectEnvironmentPlacer.Repositories
         public async Task<List<Environment2D>> GetByUserIdAsync(string userId)
         {
             string sql = @"SELECT e.* 
-                           FROM Environment2D e
-                           INNER JOIN PlayerEnvironment2D pe ON e.ID = pe.Environment2DID
-                           WHERE pe.PlayerID = @UserId";
+                   FROM Environment2D e
+                   INNER JOIN PlayerEnvironment pe ON e.ID = pe.EnvironmentId
+                   WHERE pe.PlayerId = @UserId";
 
             var result = await _dbConnection.QueryAsync<Environment2D>(sql, new { UserId = userId });
             return result.ToList();
         }
+
 
         public async Task<Environment2D> InsertAsync(string name, string? description, int width, int height)
         {
