@@ -19,7 +19,7 @@ namespace ObjectEnvironmentPlacer.Controllers
     {
         private readonly IEnvironment2DRepository _environmentRepository;
         private readonly IPlayerEnvironmentRepository _playerEnvironmentRepository;
-        private readonly ILogger<EnvironmentController> _logger;
+        private readonly ILogger<EnvironmentController> _logger
 
         public EnvironmentController(
             IEnvironment2DRepository environmentRepository,
@@ -35,12 +35,27 @@ namespace ObjectEnvironmentPlacer.Controllers
         public async Task<ActionResult<Environment2D>> Create([FromBody] Environment2D request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Name))
-                return BadRequest(new { Message = "Environment name cannot be empty." });
+                return BadRequest(new { Message = "❌ Environment name cannot be empty." });
+
+            if (request.Name.Length > 25)
+                return BadRequest(new { Message = "❌ Environment name must be 1-25 characters long." });
 
             var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { Message = "Invalid or missing token." });
+                return Unauthorized(new { Message = "❌ Invalid or missing token." });
 
+            // 🛡️ Ophalen hoeveel werelden deze gebruiker al heeft
+            var existingWorlds = await _environmentRepository.GetByUserIdAsync(userId);
+
+            if (existingWorlds.Count >= 5)
+            {
+                return BadRequest(new { Message = "❌ You already have 5 environments." });
+            }
+            // 🛡️ Check of naam al bestaat bij deze gebruiker
+            if (existingWorlds.Any(env => env.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase)))
+                return BadRequest(new { Message = "❌ You already have an environment with this name." });
+
+            // ✅ Nu pas opslaan
             var createdEnvironment = await _environmentRepository.InsertAsync(
                 request.Name,
                 request.Description,
@@ -50,9 +65,10 @@ namespace ObjectEnvironmentPlacer.Controllers
 
             await _playerEnvironmentRepository.AddPlayerToEnvironment(userId, createdEnvironment.ID);
 
-            _logger.LogInformation($"Environment {createdEnvironment.ID} created and linked to user {userId}.");
+            _logger.LogInformation($"✅ Environment {createdEnvironment.ID} created and linked to user {userId}.");
             return Ok(createdEnvironment);
         }
+
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Environment2D>>> GetAll()
