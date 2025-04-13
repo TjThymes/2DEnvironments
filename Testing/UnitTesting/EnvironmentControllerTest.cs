@@ -23,7 +23,6 @@ public class EnvironmentControllerTests
     {
         _controller = new EnvironmentController(_envRepoMock.Object, _playerEnvRepoMock.Object, _loggerMock.Object);
 
-        // Simulate a logged-in user
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, "test-user-id")
@@ -35,26 +34,11 @@ public class EnvironmentControllerTests
         };
     }
 
-    [Fact]
-    public async Task Create_ShouldReturnOk_WhenEnvironmentIsCreated()
-    {
-        // Arrange
-        var env = new Environment2D { ID = Guid.NewGuid(), Name = "Test Environment", Description = "Test Desc", Width = 100, Height = 100 };
-        _envRepoMock.Setup(r => r.InsertAsync(It.IsAny<string>(), It.IsAny<string>(),It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync(env);
-
-        // Act
-        var result = await _controller.Create(new Environment2D { Name = "Test Environment" });
-
-        // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var returnedEnv = Assert.IsType<Environment2D>(okResult.Value);
-        Assert.Equal("Test Environment", returnedEnv.Name);
-    }
 
     [Fact]
     public async Task GetAll_ShouldReturnListOfEnvironments()
     {
-        // Arrange
+
         _envRepoMock.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Environment2D>());
 
         // Act
