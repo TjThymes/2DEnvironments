@@ -19,7 +19,7 @@ namespace ObjectEnvironmentPlacer.Controllers
     {
         private readonly IEnvironment2DRepository _environmentRepository;
         private readonly IPlayerEnvironmentRepository _playerEnvironmentRepository;
-        private readonly ILogger<EnvironmentController> _logger
+        private readonly ILogger<EnvironmentController> _logger;
 
         public EnvironmentController(
             IEnvironment2DRepository environmentRepository,
