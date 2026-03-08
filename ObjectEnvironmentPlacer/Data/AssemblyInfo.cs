@@ -9,8 +9,9 @@ namespace ObjectEnvironmentPlacer.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-        public DbSet<Environment2D> Environment2D { get; set; } // ? Ensure Environments is included
-        public DbSet<GameObject2D> Objects2D { get; set; }
-        
+        //public DbSet<Environment2D> Environment2D { get; set; } // ? Ensure Environments is included
+        //public DbSet<GameObject2D> Objects2D { get; set; }
+        public DbSet<ApplicationUser> PlayerEnvironments { get; set; }
+
     }
 }
