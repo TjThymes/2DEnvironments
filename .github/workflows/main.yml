@@ -3,7 +3,7 @@ name: Deploy Backend to Azure
 on:
   push:
     branches:
-      - main  # 🚨 Pas aan als je een andere branch gebruikt
+      - master  # 🚨 Pas aan als je een andere branch gebruikt
 
 jobs:
   build-and-deploy:
